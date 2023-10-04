@@ -66,14 +66,18 @@ export function renameFunction<T extends Function> (fn: T, newName: string): T {
 }
 
 // change the name of an event
-export function event (emitter: NodeJS.EventEmitter, oldName: string, newName: string) {
+export function event (emitter: NodeJS.EventEmitter, oldName: string, newName: string, emit?: (...args: any[]) => void) {
   const warn = newName.startsWith('-') /* internal event */
     ? warnOnce(`${oldName} event`)
     : warnOnce(`${oldName} event`, `${newName} event`);
   return emitter.on(newName, function (this: NodeJS.EventEmitter, ...args) {
     if (this.listenerCount(oldName) !== 0) {
       warn();
-      this.emit(oldName, ...args);
+      if (emit) {
+        emit(oldName, ...args);
+      } else {
+        this.emit(oldName, ...args);
+      }
     }
   });
 }
